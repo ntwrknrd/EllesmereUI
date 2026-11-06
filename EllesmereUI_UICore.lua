@@ -301,8 +301,12 @@ local function ShowWidgetTooltip(label, text, opts)
     if not ttScaleMult then
         ttScaleMult = 1
         local us = EllesmereUI.PanelUserScale()
-        if us ~= 1 and label and label.GetParent and IsPanelFamilyAnchor(label) then
+        -- With readability on, the tooltip (a UIParent child) also takes the panel's
+        -- pixel-perfect base, so it matches the panel at any UI Scale.
+        local r = EllesmereUI.GetReadability()
+        if (r or us ~= 1) and label and label.GetParent and IsPanelFamilyAnchor(label) then
             ttScaleMult = us
+            if r then ttScaleMult = us * GetScreenWidth() / (GetPhysicalScreenSize()) end
         end
     end
     tt:SetScale(ttScaleMult)
