@@ -36,6 +36,46 @@ function EllesmereUI.SnapPanelScale(v)
     return math.max(EllesmereUI.PANEL_SCALE_MIN, math.min(EllesmereUI.PANEL_SCALE_MAX, v))
 end
 
+-- Readability (Global Settings > General): one opt-in multiplier shared by the
+-- integrated windows -- the options panel with its popups and tooltips, and the
+-- Unlock Mode top bar. Off (readabilityScale nil) leaves every one as before.
+-- Each window keeps its own control on top (Window Scale, the bar's - and +).
+EllesmereUI.READABILITY_MIN, EllesmereUI.READABILITY_MAX = 0.75, 2.00
+
+-- The multiplier, nil while the feature is off.
+function EllesmereUI.GetReadability()
+    local v = EllesmereUIDB and EllesmereUIDB.readabilityScale
+    if type(v) ~= "number" or v ~= v then return nil end
+    return math.max(EllesmereUI.READABILITY_MIN, math.min(EllesmereUI.READABILITY_MAX, v))
+end
+
+-- Display baseline: the 1440p reference look the panel seed uses (physH/1440,
+-- 1 to 2). Window Scale already carries it from that seed, so only windows
+-- without a seeded scale of their own apply it.
+function EllesmereUI.DisplayBaseline()
+    local _, physH = GetPhysicalScreenSize()
+    if type(physH) ~= "number" or physH <= 0 then return 1 end
+    return math.max(1, math.min(physH / 1440, 2))
+end
+
+-- The options panel's multiplier on its pixel-perfect base: Window Scale times
+-- readability. Readability above 100% stops where the window would leave the
+-- screen, never below 100%.
+function EllesmereUI.PanelUserScale()
+    local s = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+    local r = EllesmereUI.GetReadability()
+    if not r then return s end
+    local mf = EllesmereUI._mainFrame
+    if r > 1 and mf then
+        local physW, physH = GetPhysicalScreenSize()
+        local w, h = mf:GetWidth(), mf:GetHeight()
+        if physW and physH and w > 0 and h > 0 and s > 0 then
+            r = math.max(1, math.min(r, math.min(physW * 0.95 / w, physH * 0.95 / h) / s))
+        end
+    end
+    return s * r
+end
+
 -- Lua APIs
 local pairs, type, next, rawset, rawget, setmetatable, wipe =
       pairs, type, next, rawset, rawget, setmetatable, wipe

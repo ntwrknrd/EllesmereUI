@@ -1755,6 +1755,25 @@ initFrame:SetScript("OnEvent", function(self)
             langCfg
         );  y = y - h
 
+        -- Row 2b: Readability Scaling | Readability
+        _, h = W:DualRow(parent, y,
+            { type="toggle", text="Readability Scaling",
+              tooltip="Sizes the options window, its popups and the Unlock Mode top bar for your display, and lets the Readability slider scale them together. Window Scale and the top bar's - and + still adjust each one. Other EllesmereUI elements are not affected yet.",
+              getValue=function() return EllesmereUI.GetReadability() ~= nil end,
+              setValue=function(v)
+                  EllesmereUI:SetReadability(v and 1.0 or nil, "cursor")
+                  EllesmereUI:RefreshPage()
+              end },
+            { type="slider", text="Readability",
+              min=EllesmereUI.READABILITY_MIN * 100, max=EllesmereUI.READABILITY_MAX * 100, step=5,
+              tooltip="Scales every window that uses Readability Scaling. The options window stops growing where it would no longer fit on screen.",
+              tooltipOnControl=true,
+              disabled=function() return EllesmereUI.GetReadability() == nil end,
+              disabledTooltip="Readability Scaling",
+              getValue=function() return math.floor((EllesmereUI.GetReadability() or 1) * 100 + 0.5) end,
+              setValue=function(v) EllesmereUI:SetReadability(v / 100, "cursor") end }
+        );  y = y - h
+
         -- Row 3: EUI Buttons (merged button toggles) | Disable Sync Icons (+ cog)
         -- "EUI Buttons" merges the Pause Menu, Unlock Mode Menu and Minimap
         -- toggles into one checkbox-dropdown over the SAME backend variables: front-end grouping only, settings/defaults unchanged.

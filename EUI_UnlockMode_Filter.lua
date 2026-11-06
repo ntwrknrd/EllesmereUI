@@ -193,20 +193,19 @@ end
 -- Keeps the banner and its - and + on screen: a banner scale that no longer
 -- fits (a smaller screen) shows at the largest step that does, without saving
 -- it, and CreateHUD greys + where the next step would not fit (its scale cap).
+-- The floor is 100%, or lower with readability on (CreateHUD's fit floor).
 local function MakeFit(hud, frame)
     local L = hud._hudLayout
-    local s0 = EllesmereUIDB and EllesmereUIDB.unlockBannerScale or L.scaleMin
-    local base = hud:GetScale() / math.max(L.scaleMin, math.min(L.scaleMax, s0))  -- scale at 100%
     return function()
+        local base, low, saved = hud._refreshBase()
         local V = GetScreenWidth() / (2 * base)
         local fitMax = V / Layout(hud, frame, V)
-        local s = hud:GetScale() / base
-        local target = s
-        if s > math.max(L.scaleMin, fitMax) + 0.001 then
-            target = math.max(L.scaleMin, math.floor(fitMax / L.scaleStep + 0.001) * L.scaleStep)
+        local target = saved
+        if saved > math.max(low, fitMax) + 0.001 then
+            target = math.max(low, math.floor(fitMax / L.scaleStep + 0.001) * L.scaleStep)
         end
         hud._setScaleCap(fitMax)
-        if target ~= s then hud._applyBannerScale(target, true) end
+        if math.abs(hud:GetScale() - base * target) > 0.0001 then hud._applyBannerScale(target, true) end
     end
 end
 

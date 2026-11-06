@@ -300,8 +300,8 @@ local function ShowWidgetTooltip(label, text, opts)
     local ttScaleMult = opts and opts.scale
     if not ttScaleMult then
         ttScaleMult = 1
-        local us = EllesmereUIDB and EllesmereUIDB.panelScale
-        if us and us ~= 1 and label and label.GetParent and IsPanelFamilyAnchor(label) then
+        local us = EllesmereUI.PanelUserScale()
+        if us ~= 1 and label and label.GetParent and IsPanelFamilyAnchor(label) then
             ttScaleMult = us
         end
     end

@@ -52,6 +52,20 @@ end
 
 local hoverBarEnabled = false   -- show-bar-on-hover toggle
 
+-- The bar's scale at its own 100%, and the scale it had there before readability.
+-- Pixel-perfect (1 frame unit = 1 physical screen pixel); at very low UI scales
+-- the bar gets too small to read, so it is enlarged 8%. With readability on, the
+-- display baseline and readability replace that bump.
+local function BannerBaseScale()
+    local physW = (GetPhysicalScreenSize())
+    local pp = GetScreenWidth() / physW
+    local legacy = pp
+    if UIParent:GetEffectiveScale() < 0.6 then legacy = pp * 1.08 end
+    local r = EllesmereUI.GetReadability()
+    if not r then return legacy, legacy end
+    return pp * EllesmereUI.DisplayBaseline() * r, legacy
+end
+
 local function CreateHUD(parent)
     if UM.hudFrame then return UM.hudFrame end
 
@@ -65,13 +79,9 @@ local function CreateHUD(parent)
     UM.gridMode = (EllesmereUIDB and EllesmereUIDB.unlockGridMode) or "dimmed"
     UM.snapEnabled = (EllesmereUIDB and EllesmereUIDB.unlockSnapEnabled ~= false) or true
 
-    -- Pixel-perfect scale: 1 frame unit = 1 physical screen pixel
-    local physW = (GetPhysicalScreenSize())
-    local uiScale = GetScreenWidth() / physW
-    -- At very low UI scales the top bar gets too small to read; enlarge it 15%.
-    -- Bumping the base here propagates through every downstream scale use
-    -- (initial scale, user banner scale, slide-in offsets read GetScale()).
-    if UIParent:GetEffectiveScale() < 0.6 then uiScale = uiScale * 1.08 end
+    -- Every downstream scale use (initial scale, user banner scale, slide-in
+    -- offsets read GetScale()) builds on this base.
+    local uiScale, legacyScale = BannerBaseScale()
 
     UM.hudFrame = CreateFrame("Frame", nil, parent)
     UM.hudFrame:SetFrameStrata("TOOLTIP")
@@ -486,9 +496,13 @@ local function CreateHUD(parent)
             end
         end
 
+        -- Lowest step the screen fit may show: 100%, or with readability on, down
+        -- to the size the bar had before it.
+        local function FitFloor() return min(SCALE_MIN, legacyScale / uiScale) end
+
         -- noSave: the filter's screen fit (EUI_UnlockMode_Filter.lua) keeps the saved choice.
         local function ApplyBannerScale(newScale, noSave)
-            newScale = max(SCALE_MIN, min(SCALE_MAX, newScale))
+            newScale = max(noSave and FitFloor() or SCALE_MIN, min(SCALE_MAX, newScale))
             bannerUserScale = newScale
             if EllesmereUIDB and not noSave then EllesmereUIDB.unlockBannerScale = newScale end
             UM.hudFrame:SetScale(uiScale * newScale)
@@ -559,6 +573,13 @@ local function CreateHUD(parent)
         UM.hudFrame._plusBtn = plusBtn
         UM.hudFrame._applyBannerScale = ApplyBannerScale
         UM.hudFrame._setScaleCap = function(cap) scaleCap = cap; RefreshScaleBtns() end
+        -- Re-reads the base (screen, UI scale, readability) for the fit as the bar
+        -- shows: the scale at 100%, the fit's floor and the saved choice.
+        UM.hudFrame._refreshBase = function()
+            uiScale, legacyScale = BannerBaseScale()
+            return uiScale, FitFloor(), max(SCALE_MIN, min(SCALE_MAX,
+                (EllesmereUIDB and EllesmereUIDB.unlockBannerScale) or SCALE_MIN))
+        end
         -- The bar's own numbers for the element filter's layout (EUI_UnlockMode_Filter.lua).
         UM.hudFrame._hudLayout = {
             upLeft = UP_LEFT, upRight = UP_RIGHT, gapL = GAP_L, gapR1 = GAP_R1, gapR2 = GAP_R2,
@@ -1378,7 +1399,7 @@ local function DoClose(closeAction)
     do
         local physW = (GetPhysicalScreenSize())
         local baseScale = GetScreenWidth() / physW
-        local userScale = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+        local userScale = EllesmereUI.PanelUserScale()
         panelRealScale = baseScale * userScale
     end
     local panel = EllesmereUI and EllesmereUI._mainFrame

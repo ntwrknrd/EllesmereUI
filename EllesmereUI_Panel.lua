@@ -207,7 +207,7 @@ local function BuildFrame()
         -- Recalculate pixel-perfect base scale on every open so resolution / UIParent scale changes apply
         local physW2 = (GetPhysicalScreenSize())
         local baseScale2 = GetScreenWidth() / physW2
-        local userScale2 = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+        local userScale2 = EllesmereUI.PanelUserScale()
         mainFrame:SetScale(baseScale2 * userScale2)
         -- Re-sync PanelPP mult for the (possibly new) scale
         if EllesmereUI.PanelPP then EllesmereUI.PanelPP.UpdateMult() end
@@ -239,7 +239,7 @@ local function BuildFrame()
     -- Pixel-perfect scale: make 1 WoW unit = 1 screen pixel
     local physW = (GetPhysicalScreenSize())
     local baseScale = GetScreenWidth() / physW
-    local userScale = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+    local userScale = EllesmereUI.PanelUserScale()
     mainFrame:SetScale(baseScale * userScale)
     -- Initialize PanelPP mult for the saved user scale
     if EllesmereUI.PanelPP then EllesmereUI.PanelPP.UpdateMult() end
@@ -5533,8 +5533,8 @@ do
         if not mainFrame then return end
         local physW = (GetPhysicalScreenSize())
         local baseScale = GetScreenWidth() / physW
-        local targetScale = baseScale * (userScale or 1.0)
         if EllesmereUIDB then EllesmereUIDB.panelScale = userScale end
+        local targetScale = baseScale * EllesmereUI.PanelUserScale()
         -- Recalculate PanelPP mult for the new scale
         if EllesmereUI.PanelPP then EllesmereUI.PanelPP.UpdateMult() end
         -- The pin shares the panel's scale, so its centre and the panel's edges read
@@ -5564,6 +5564,14 @@ do
             isAnimating = true
             scaleAnimFrame:SetScript("OnUpdate", OnScaleUpdate)
         end
+    end
+
+    --- Sets the readability multiplier (nil = off, EllesmereUI_Lite.lua). The panel
+    --- glides to it about `pin`; the Unlock Mode bar picks it up as it next shows.
+    function EllesmereUI:SetReadability(v, pin)
+        if not EllesmereUIDB then return end
+        EllesmereUIDB.readabilityScale = v
+        if mainFrame then self:SetPanelScale(EllesmereUIDB.panelScale, pin) end
     end
 
     --- One 5% step of the panel scale (delta > 0 grows), clamped to

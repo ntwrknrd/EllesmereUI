@@ -960,7 +960,7 @@ do
             local sw = GetScreenWidth()
             if physW and physW > 0 and sw and sw > 0 then
                 local baseScale = sw / physW
-                local userScale = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+                local userScale = EllesmereUI.PanelUserScale()
                 mf:SetScale(baseScale * userScale)
                 if EllesmereUI.PanelPP then EllesmereUI.PanelPP.UpdateMult() end
             end
@@ -985,7 +985,7 @@ do
     PanelPP.mult = 1
 
     function PanelPP.UpdateMult()
-        local userScale = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+        local userScale = EllesmereUI.PanelUserScale()
         if userScale == 0 then userScale = 1 end
         -- 1 physical pixel = 1/userScale panel units
         PanelPP.mult = 1 / userScale

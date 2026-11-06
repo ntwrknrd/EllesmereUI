@@ -24,7 +24,7 @@ EllesmereUI._popupFrames = _popupFrames
 local function GetPopupScale()
     local physW = (GetPhysicalScreenSize())
     local baseScale = GetScreenWidth() / physW
-    local userScale = (EllesmereUIDB and EllesmereUIDB.panelScale) or 1.0
+    local userScale = EllesmereUI.PanelUserScale()
     return baseScale * userScale
 end
 EllesmereUI.GetPopupScale = GetPopupScale
