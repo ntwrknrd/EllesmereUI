@@ -134,6 +134,22 @@ do
             if EllesmereUIDB.ppUIScale == nil then
                 local blizzScale = UIParent:GetScale()
                 local clamped = max(0.4, min(blizzScale, 1.15))
+                -- A brand-new install (the first-install picker is pending) still on
+                -- Blizzard's default 1.0 starts at the suite's reference size for this
+                -- display instead, with readability on so the Unlock Mode bar gets its
+                -- display baseline. A scale chosen in Blizzard's settings, or a
+                -- /euiresetscale, keeps the snapshot.
+                local useUiScale = C_CVar and C_CVar.GetCVar and C_CVar.GetCVar("useUiScale")
+                if EllesmereUI._firstInstallPending and useUiScale ~= "1"
+                   and math.abs(blizzScale - 1) < 0.01 then
+                    local rec = EllesmereUI.RecommendedUIScale()
+                    if rec then
+                        clamped = rec
+                        if EllesmereUIDB.readabilityScale == nil then EllesmereUIDB.readabilityScale = 1.0 end
+                        EllesmereUI.Print(EllesmereUI.Lf("UI Scale set to %1$s for your display. Change it in Global Settings > General.",
+                            string.format("%.2f", rec)))
+                    end
+                end
                 EllesmereUIDB.ppUIScale = clamped
                 EllesmereUIDB.ppUIScaleAuto = false
 

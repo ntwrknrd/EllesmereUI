@@ -58,6 +58,24 @@ function EllesmereUI.DisplayBaseline()
     return math.max(1, math.min(physH / 1440, 2))
 end
 
+-- Recommended UI Scale: the suite's reference look (1440p pixel-perfect,
+-- 768/1440), which covers the same share of the screen on any display. Snapped
+-- to a whole multiple of the display's pixel-perfect scale when one is within
+-- 15% (5K: exactly 2x), never below 1x (1080p: 0.7111). nil = unknown display.
+function EllesmereUI.RecommendedUIScale()
+    local _, physH = GetPhysicalScreenSize()
+    if type(physH) ~= "number" or physH <= 0 then return nil end
+    local ref, perfect = 768 / 1440, 768 / physH
+    local s = ref
+    if ref < perfect then
+        s = perfect
+    else
+        local k = math.floor(ref / perfect + 0.5)
+        if math.abs(k * perfect - ref) <= 0.15 * ref then s = k * perfect end
+    end
+    return math.max(0.4, math.min(s, 1.15))
+end
+
 -- The options panel's multiplier on its pixel-perfect base: Window Scale times
 -- readability. Readability above 100% stops where the window would leave the
 -- screen, never below 100%.

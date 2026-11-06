@@ -1711,7 +1711,14 @@ initFrame:SetScript("OnEvent", function(self)
         _, h = W:DualRow(parent, y,
             { type="slider", text="UI Scale",
               min=0.40, max=1.00, step=0.01,
-              tooltip="Sets the scale of the whole game UI. 0.53 = 0.5333 and 0.71 = 0.7111",
+              tooltip=function()
+                  local s = EllesmereUI.L("Sets the scale of the whole game UI. 0.53 = 0.5333 and 0.71 = 0.7111")
+                  local rec = EllesmereUI.RecommendedUIScale()
+                  if rec then
+                      s = s .. "\n" .. EllesmereUI.Lf("Recommended for your display: %1$s", string.format("%.2f", rec))
+                  end
+                  return s
+              end,
               tooltipOnControl=true,
               getValue=function()
                 if EllesmereUI._uiScaleDragVal then
